@@ -1,4 +1,4 @@
-# Bar Chart Drawing Class
+# Bar Chart
 
 Do you want to draw a bar chart in your web page but don't want to deal with the complex code of setting up the chart? The Bar Chart Drawing function can help you with that! This function helps you create bar charts with ease by handling the complex logic of chart creation, so you can focus on the data.
 
@@ -43,7 +43,7 @@ Enjoy your bar chart!
 
 The development of this project is ongoing, with a focus on making improvements and adding new features
 
-## image
+## images
 
-![image]('./screenshots/screenshot_barChart.png')
-![image]('./screenshots/screenshot2_barChart.png')
+![chart image]('./screenshots/barChart.png')
+![chart image2]('./screenshots/barChart2.png')
