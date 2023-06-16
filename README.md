@@ -45,5 +45,5 @@ The development of this project is ongoing, with a focus on making improvements 
 
 ## images
 
-![chart image]('./screenshots/barChart.png')
-![chart image2]('./screenshots/barChart2.png')
+![chart image](/screenshots/barChart.png)
+![chart image2](/screenshots/barChart2.png)
