@@ -1,7 +1,7 @@
 const canvas = document.getElementById("myChart");
 let ctx = canvas.getContext("2d");
 canvas.width = innerWidth - 5;
-canvas.height=innerHeight -50;
+canvas.height = innerHeight - 50;
 let height = canvas.height;
 let width = canvas.width;
 
@@ -29,5 +29,5 @@ function covertToPercentage(itemHeight, canvasHeight) {
   return equivHeight;
 }
 const n = [120, 40, 10, 400];
-let days=[17.45,34.91,52.36,31.07,23.39,43.28,25.48]
-bar(days)
+let days = [17.45, 34.91, 52.36, 3.07, 23.39, 43.28, 25.48];
+bar(days);
