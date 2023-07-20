@@ -7,8 +7,8 @@ Do you want to draw a bar chart in your web page but don't want to deal with the
 - Normalize the data to fit the chart height
 - Draw bars with specified color
 - Shows label on hover
-- set label color
-- hover background color
+- Set label color
+- Hover background color
 
 ### options
 
@@ -20,14 +20,14 @@ Do you want to draw a bar chart in your web page but don't want to deal with the
 
 ## How to Use
 
-- download source code
+- Download source code
 - Add the javascript file to your html via the "script" tag
 - Add a canvas element to your html set an id
   ....html
-  <canvas id='myChart'></canvas>
-
-<script src="./barChart.js" type='module'>
-<script src="./main.js" type='module'>
+```javascript
+<canvas id='myChart'></canvas>
+<script src="./barChart.js"'>
+<script src="./main.js">
 
 //Grab the id of the canvas.
 const canvas = document.getElementById("myChart");
@@ -53,9 +53,8 @@ const config = {
 let chart = new BarChart(canvas);
 chart.config(config);
 chart.draw();
-
 </script>
-
+```
 Enjoy your bar chart!
 
 ## Limitations
