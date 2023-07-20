@@ -24,6 +24,7 @@ Do you want to draw a bar chart in your web page but don't want to deal with the
 - Add the javascript file to your html via the "script" tag
 - Add a canvas element to your html set an id
   ....html
+
 ```javascript
 <canvas id='myChart'></canvas>
 <script src="./barChart.js"'>
@@ -39,7 +40,7 @@ const days_of_the_week= [
   { label: "fri", data: "5" },
   { label: "sat", data: "6" },
   { label: "sun", data: "7" },
-  
+
 ]
 //  Create the config.
 const config = {
@@ -55,6 +56,7 @@ chart.config(config);
 chart.draw();
 </script>
 ```
+
 Enjoy your bar chart!
 
 ## Limitations
@@ -66,7 +68,6 @@ Enjoy your bar chart!
 
 The development of this project is ongoing, with a focus on making improvements and adding new features
 
-## images
+## image
 
-![chart full display](/screenshots/barChart.png)
-![chart hover on element](/screenshots/barChartHover.png)
+![chart hover on element](/screenshots/hoverstate.png)
