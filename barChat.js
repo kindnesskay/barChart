@@ -1,204 +1,304 @@
-export class BarChart {
+class BarChart {
+  #arrow = "right"; //for the potion of the arrow
+  #c; //the canvas context variable
+  #dialog_properties = {
+    position: { x: 0, y: 0 },
+    height: 50,
+    width: 100,
+    textColor: "#fff",
+    backgroundColor: "#000",
+    text: "",
+    font: "20px Arial",
+    arrow_lenght: 15,
+  }; //dialog box properties
+  #hoverd = false;
+  #elementIndex = []; //bar element data
+  #options = {
+    color: "orange",
+    outline: 1,
+    outlineColor: false,
+    graph: false,
+    title: "",
+    hoverBackgroundCcolor: null,
+  }; // set the options of the chart
   constructor(canvasElement) {
     this.canvasElement = canvasElement;
-    this.data = [10, 20, 30, 40];
-    this.options = { color: "#f00", outline: 1, outlineColor: false };
-    this.dialog = {
-      positon: { x: 0, y: 0 },
-      height: 50,
-      width: 100,
-      textColor: "#fff",
-      backgroundColor: "#000",
-      text: "",
-      font: "15px Arial",
-    };
-    this._arrow = "right";
-    this._elementIndex = [];
-    this._c = this.canvasElement.getContext("2d");
+    this.data = "";
+
     this.canvasElement.addEventListener(
       "mousemove",
-      this._handleEvent.bind(this)
+      this.#handleEvent.bind(this)
     );
   }
-  _handleEvent(e) {
-    this._c.clearRect(
+
+  // functions
+
+  #handleEvent(e) {
+    // Clear the canvas
+    this.#c.clearRect(
       0,
       0,
       this.canvasElement.width,
       this.canvasElement.height
     );
+
+    // Redraw the chart
     this.draw();
 
-    let x = this.canvasElement.getBoundingClientRect().x;
-    let y = this.canvasElement.getBoundingClientRect().y;
-    this._elementIndex.map((index) => {
-      if (e.clientX >= index.x.left + x && e.clientX <= index.x.right + x) {
-        if (
-          e.clientY >= index.y.top + y &&
-          e.clientY <= index.y.top + index.height
-        ) {
-          if (index.y.top > this.canvasElement.height / 2) {
-            this.dialog.positon.y = index.y.top;
-          } else {
-            this.dialog.positon.y = this.canvasElement.height / 2;
-          }
+    // Get the canvas's bounding box
+    const canvasRect = this.canvasElement.getBoundingClientRect();
+    const x = canvasRect.x;
+    const y = canvasRect.y;
 
-          // logic to make this.dialog box display within the views
-          // set to right
-          console.log(x);
-          console.log(this.canvasElement.width);
-          if (x < this.dialog.width && index.x.left < this.dialog.width) {
-            this._arrow = "left";
-            this.dialog.positon.x = index.x.right + 10;
-          } else {
-            // set to left
-            this._arrow = "right";
-            this.dialog.positon.x = index.x.left - this.dialog.width - 10;
-          }
-          this.dialog.text = index.data;
-          this._dialog();
+    // Handle the event for each element in the index
+    this.#elementIndex.forEach((index) => {
+      const elementXLeft = index.x.left + x;
+      const elementXRight = index.x.right + x;
+      const elementYTop = index.y.top + y;
+      const elementYBottom = index.y.top + index.height + y;
+
+      if (
+        e.clientX >= elementXLeft &&
+        e.clientX <= elementXRight &&
+        e.clientY >= elementYTop &&
+        e.clientY <= elementYBottom
+      ) {
+        this.#hoverd = index;
+        // Set the dialog position based on the element's y-coordinate
+        this.#dialog_properties.position.y =
+          index.y.top > this.canvasElement.height / 2
+            ? index.y.top
+            : this.canvasElement.height / 2;
+
+        // Set the arrow direction and dialog position based on the element's x-coordinate
+        if (
+          x < this.#dialog_properties.width + x &&
+          index.x.left < this.#dialog_properties.width
+        ) {
+          this.#arrow = "left";
+          this.#dialog_properties.position.x =
+            index.x.right + this.#dialog_properties.arrow_lenght;
+        } else {
+          this.#arrow = "right";
+          this.#dialog_properties.position.x =
+            index.x.left -
+            this.#dialog_properties.width -
+            this.#dialog_properties.arrow_lenght;
         }
+        if (index.height <= this.#dialog_properties.height) {
+          this.#dialog_properties.position.y =
+            index.y.top - this.#dialog_properties.height;
+        }
+
+        // Set the dialog text to the element's data and display the dialog
+        this.#dialog_properties.text = index.data;
+        this.#dialog();
       }
     });
   }
-  _covertToPercentage(itemHeight, canvasHeight) {
-    // convert data to height equivilent to the canvas height
-    let maxHeight,
-      percentageheight,
-      equivHeight = "";
-    maxHeight = Math.max(...itemHeight);
-    percentageheight = itemHeight.map((height) => (height / maxHeight) * 90);
-    equivHeight = percentageheight.map(
+
+  #covertToPercentage(itemHeight, canvasHeight) {
+    // Find the maximum height in the itemHeight array
+    const maxHeight = Math.max(...itemHeight);
+    // Calculate the percentage height for each item relative to the maximum height
+    const percentageHeight = itemHeight.map(
+      (height) => (height / maxHeight) * 90
+    );
+    // Convert the percentage height to equivalent height on the canvas
+    const equivHeight = percentageHeight.map(
       (percent) => (canvasHeight * percent) / 100
     );
     return equivHeight;
   }
-  draw() {
-    // draw the chart
-    this._c.fillStyle = this.options.color;
 
-    this._c.lineWidth = this.options.outline;
-    this._elementIndex.map((bar) => {
-      this._c.fillRect(bar.x.left, bar.y.top, bar.width, bar.height);
+  draw() {
+    const sections = [];
+    const canvasHeight = this.canvasElement.height;
+    const canvasWidth = this.canvasElement.width;
+
+    // Function to calculate percentage of height
+    function per(height, percent) {
+      return (height * percent) / 100;
+    }
+
+    // Draw chart sections and scales
+    let num = 100;
+    for (let i = 10; i <= 100; i += 10) {
+      const h = per(canvasHeight * 0.9, i);
+      sections.push({
+        move_to: { x: 0, y: h },
+        line_to: { x: canvasWidth, y: h },
+        scale: num,
+      });
+      num -= 10;
+    }
+
+    // Set the chart title
+    // this.#c.lineWidth = this.#options.outline;
+    this.#c.font = "25px Arial black";
+    this.#c.fillStyle = "#000";
+    this.#c.fillText(this.#options.title, 100, 30);
+
+    // Draw graph if required
+    if (this.#options.graph) {
+      //
+      this.#c.lineWidth = 0.7;
+      this.#c.beginPath();
+      this.#c.moveTo(0, sections[0].move_to.y);
+      this.#c.lineTo(0, canvasHeight * 0.9);
+      this.#c.stroke();
+      this.#c.beginPath();
+      this.#c.moveTo(sections[0].line_to.x, sections[0].move_to.y);
+      this.#c.lineTo(sections[0].line_to.x, canvasHeight * 0.9);
+      this.#c.stroke();
+
+      sections.forEach((section) => {
+        this.#c.fillStyle = "black";
+        this.#c.font = "10px Arial";
+        this.#c.fillText(section.scale, 0, section.move_to.y);
+        this.#c.beginPath();
+        this.#c.moveTo(section.move_to.x, section.move_to.y);
+        this.#c.lineTo(section.line_to.x, section.line_to.y);
+        this.#c.stroke();
+      });
+    }
+
+    // Draw bars and write labels
+    this.#elementIndex.forEach((bar) => {
+      this.#c.fillStyle = this.#options.color;
+      this.#c.fillRect(bar.x.left, bar.y.top, bar.width, bar.height);
+      if (this.#hoverd && this.#options.hoverBackgroundColor) {
+        this.#c.fillStyle = this.#options.hoverBackgroundColor;
+        this.#c.fillRect(
+          this.#hoverd.x.left,
+          this.#hoverd.y.top,
+          this.#hoverd.width,
+          this.#hoverd.height
+        );
+      }
+
+      this.#c.fillStyle = "#000";
+      this.#c.font = "15px Arial";
+      this.#c.fillText(bar.data, bar.x.left, canvasHeight);
     });
   }
-  // displays the info of the hoverd bar
-  _dialog() {
-    // main this.dialog bok
-    this._c.fillStyle = this.dialog.backgroundColor;
-    this._c.fillRect(
-      this.dialog.positon.x,
-      this.dialog.positon.y,
-      this.dialog.width,
-      this.dialog.height
-    );
-    let positon = 0;
-    let arrow_lenght = 12;
 
-    switch (this._arrow) {
+  // displays the info of the hoverd bar
+  #dialog() {
+    const { position, height, width } = this.#dialog_properties;
+    this.#c.fillStyle = this.#dialog_properties.backgroundColor;
+    this.#c.fillRect(position.x, position.y, width, height);
+    let arrow_position = 0;
+    let arrow_lenght = this.#dialog_properties.arrow_lenght;
+
+    switch (this.#arrow) {
       case "right":
-        positon = this.dialog.width;
-        arrow_lenght = +12;
+        arrow_position = width;
+        arrow_lenght = +this.#dialog_properties.arrow_lenght;
         break;
       case "left":
-        positon = 0;
-        arrow_lenght = -12;
+        arrow_position = 0;
+        arrow_lenght = -this.#dialog_properties.arrow_lenght;
         break;
+      case "none":
+        arrow_lenght = 0;
       default:
         break;
     }
-    this._c.strokeRect(
-      this.dialog.positon.x,
-      this.dialog.positon.y,
-      this.dialog.width,
-      this.dialog.height
-    );
-    // top part of arrow in x of box
-    this._c.beginPath();
-    this._c.moveTo(this.dialog.positon.x + positon, this.dialog.positon.y);
-    this._c.lineTo(
-      this.dialog.positon.x + positon,
-      this.dialog.positon.y + this.dialog.height * 0.25
-    );
-    this._c.lineTo(
-      this.dialog.positon.x + positon + arrow_lenght,
-      this.dialog.positon.y + this.dialog.height * 0.5
-    );
-    // end of top part
-
-    // down part
-    this._c.lineTo(
-      this.dialog.positon.x + positon,
-      this.dialog.positon.y + this.dialog.height * 0.75
-    );
-    this._c.lineTo(
-      this.dialog.positon.x + positon,
-      this.dialog.positon.y + this.dialog.height
+    // top part of arrow in x axis of box
+    this.#c.beginPath();
+    this.#c.moveTo(position.x + arrow_position, position.y);
+    this.#c.lineTo(position.x + arrow_position, position.y + height * 0.25);
+    this.#c.lineTo(
+      position.x + arrow_position + arrow_lenght,
+      position.y + height * 0.5
     );
 
-    this._c.lineTo(this.dialog.positon.x + positon, this.dialog.positon.y);
-    // end of down part
-    this._c.fill();
+    this.#c.lineTo(position.x + arrow_position, position.y + height * 0.75);
+    this.#c.lineTo(position.x + arrow_position, position.y + height);
+    this.#c.lineTo(position.x + arrow_position, position.y);
+    this.#c.fill();
     // end of side arrow
 
-    // show bar chart color in the this.dialog box
-    this._c.fillStyle = this.options.color;
-    this._c.fillRect(this.dialog.positon.x, this.dialog.positon.y, 20, 20);
+    // show bar chart color in the this.#dialog_properties box
+    this.#c.fillStyle = this.#options.color;
+    this.#c.fillRect(position.x, position.y, 20, 20);
     // displays  the text or info of hoverd bar
-    this._c.fillStyle = this.dialog.textColor;
-    this._c.font = this.dialog.font;
-    this._c.fillText(
-      this.dialog.text,
-      this.dialog.positon.x + 30,
-      this.dialog.positon.y + this.dialog.height / 2
+    this.#c.fillStyle = this.#dialog_properties.textColor;
+    this.#c.font = this.#dialog_properties.font;
+    this.#c.fillText(
+      this.#dialog_properties.text,
+      position.x + 30,
+      position.y + height / 2
     );
   }
-  set_data(user_defined_data) {
-    // set the user defined data as the chart data
-    this.data = user_defined_data;
 
-    let list = [];
-    this.data.map((data) => {
-      list.push(data.data);
-    });
+  config(config) {
+    // Check if config.options exists
+    if (!config.options) {
+      console.error("config error: options not provided");
+      return false;
+    }
 
-    // normalize the data to show significant data height difference
-    const normalized_data = this._covertToPercentage(
-      list,
-      this.canvasElement.height
+    const { options, data } = config;
+    // Destructure options
+    const { backgroundColor, textColor, graph, title, hoverBackgroundColor } =
+      options;
+
+    // Set properties directly without using variables
+    if (backgroundColor) this.#options.color = backgroundColor;
+    if (textColor) this.#dialog_properties.textColor = textColor;
+    if (graph) this.#options.graph = graph;
+    if (title) this.#options.title = title;
+    if (hoverBackgroundColor)
+      this.#options.hoverBackgroundColor = hoverBackgroundColor;
+
+    // Check if data exists
+    if (!data) {
+      console.error("config error: data not provided");
+      return false;
+    }
+
+    // Directly set the data property
+    this.data = data;
+
+    // Retrieve the 2D context only when necessary
+    this.#c = this.canvasElement.getContext("2d");
+
+    this.#setConfiguration(data);
+
+    // Return true to indicate successful configuration
+    return true;
+  }
+
+  #setConfiguration(user_defined_data) {
+    const dataNumbers = this.data.map((entry) => entry.data);
+    const normalized_data = this.#covertToPercentage(
+      dataNumbers,
+      (this.canvasElement.height * 90) / 100
     );
-    // variables for creating the actual bar chart
-    /*
-    spacevalue gets the number of spacing needed
-    width gives even widths to all bars
-    spacing defines the spacing between the bars
-    barx is the x axis of the bar
-    bary is the y axis of the bar
 
-    */
-    let spaceValue,
-      barWidth,
-      spacing,
-      barX,
-      barY = "";
-    spaceValue = this.data.length;
-    barWidth = this.canvasElement.width / (spaceValue * 1.2);
-    spacing = this.canvasElement.width / this.data.length - barWidth;
-    barX = spacing;
-    barY;
+    const numberOfBars = this.data.length;
+    const barWidth =
+      (this.canvasElement.width * 95) / 100 / (numberOfBars * 1.2);
+    const spacing =
+      (this.canvasElement.width * 95) / 100 / numberOfBars - barWidth;
 
-    // map the new data to create the bar properties
-    normalized_data.map((barHeight, index) => {
-      barY = this.canvasElement.height - barHeight;
-      let element = {
-        x: { left: barX, right: barWidth + barX },
+    let barX = (this.canvasElement.width * 4) / 100;
+
+    const bars = [];
+    normalized_data.forEach((barHeight, index) => {
+      const barY = (this.canvasElement.height * 90) / 100 - barHeight;
+      const bar = {
+        x: { left: barX, right: barX + barWidth },
         y: { top: barY },
         width: barWidth,
         height: barHeight,
-        data: this.data[index].text,
+        data: this.data[index].label,
       };
       barX += barWidth + spacing;
-      this._elementIndex.push(element);
+      bars.push(bar);
     });
+    this.#elementIndex = bars;
   }
 }
