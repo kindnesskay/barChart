@@ -3,7 +3,7 @@ class BarChart {
   #c; //the canvas context variable
   #dialog_properties = {
     position: { x: 0, y: 0 },
-    height: 50,
+    height: 40,
     width: 100,
     textColor: "#fff",
     backgroundColor: "#000",
@@ -279,9 +279,10 @@ class BarChart {
 
   #setConfiguration(user_defined_data) {
     const dataNumbers = this.data.map((entry) => entry.data);
+
     const normalized_data = this.#covertToPercentage(
       dataNumbers,
-      (this.canvasElement.height * 90) / 100
+      (this.canvasElement.height * 70) / 100
     );
 
     const numberOfBars = this.data.length;
