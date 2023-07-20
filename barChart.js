@@ -29,19 +29,18 @@ class BarChart {
       "mousemove",
       this.#handleEvent.bind(this)
     );
+    this.canvasElement.addEventListener(
+      "mouseout",
+      this.#handleEventOut.bind(this)
+    );
   }
 
   // functions
-
+  #handleEventOut() {
+    this.#hoverd = "";
+    this.draw();
+  }
   #handleEvent(e) {
-    // Clear the canvas
-    this.#c.clearRect(
-      0,
-      0,
-      this.canvasElement.width,
-      this.canvasElement.height
-    );
-
     // Redraw the chart
     this.draw();
 
@@ -112,6 +111,13 @@ class BarChart {
   }
 
   draw() {
+    // Clear the canvas
+    this.#c.clearRect(
+      0,
+      0,
+      this.canvasElement.width,
+      this.canvasElement.height
+    );
     const sections = [];
     const canvasHeight = this.canvasElement.height;
     const canvasWidth = this.canvasElement.width;
@@ -135,9 +141,9 @@ class BarChart {
 
     // Set the chart title
     // this.#c.lineWidth = this.#options.outline;
-    this.#c.font = "25px Arial black";
+    this.#c.font = "18px Arial  ";
     this.#c.fillStyle = "#000";
-    this.#c.fillText(this.#options.title, 100, 30);
+    this.#c.fillText(this.#options.title, 10, 20);
 
     // Draw graph if required
     if (this.#options.graph) {
