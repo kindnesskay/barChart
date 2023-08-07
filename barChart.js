@@ -7,16 +7,18 @@ class BarChart {
     width: 100,
     textColor: "#fff",
     backgroundColor: "#000",
+    opacity: 1,
     text: "",
     font: "20px Arial",
     arrow_lenght: 15,
   }; //dialog box properties
+  #legend = false;
   #hoverd = false;
   #elementIndex = []; //bar element data
   #options = {
-    color: "orange",
-    outline: 1,
-    outlineColor: false,
+    color: null,
+    borderSize: 1,
+    borderColor: null,
     graph: false,
     title: "",
     hoverBackgroundCcolor: null,
@@ -42,7 +44,6 @@ class BarChart {
   }
   #handleEvent(e) {
     // Redraw the chart
-    this.draw();
 
     // Get the canvas's bounding box
     const canvasRect = this.canvasElement.getBoundingClientRect();
@@ -55,7 +56,6 @@ class BarChart {
       const elementXRight = index.x.right + x;
       const elementYTop = index.y.top + y;
       const elementYBottom = index.y.top + index.height + y;
-
       if (
         e.clientX >= elementXLeft &&
         e.clientX <= elementXRight &&
@@ -63,6 +63,7 @@ class BarChart {
         e.clientY <= elementYBottom
       ) {
         this.#hoverd = index;
+        this.#legend = true;
         // Set the dialog position based on the element's y-coordinate
         this.#dialog_properties.position.y =
           index.y.top > this.canvasElement.height / 2
@@ -91,9 +92,9 @@ class BarChart {
 
         // Set the dialog text to the element's data and display the dialog
         this.#dialog_properties.text = index.data;
-        this.#dialog();
       }
     });
+    this.draw();
   }
 
   #covertToPercentage(itemHeight, canvasHeight) {
@@ -111,88 +112,48 @@ class BarChart {
   }
 
   draw() {
-    // Clear the canvas
-    this.#c.clearRect(
-      0,
-      0,
-      this.canvasElement.width,
-      this.canvasElement.height
-    );
-    const sections = [];
     const canvasHeight = this.canvasElement.height;
     const canvasWidth = this.canvasElement.width;
-
-    // Function to calculate percentage of height
-    function per(height, percent) {
-      return (height * percent) / 100;
-    }
-
-    // Draw chart sections and scales
-    let num = 100;
-    for (let i = 10; i <= 100; i += 10) {
-      const h = per(canvasHeight * 0.9, i);
-      sections.push({
-        move_to: { x: 0, y: h },
-        line_to: { x: canvasWidth, y: h },
-        scale: num,
-      });
-      num -= 10;
-    }
+    // Clear the canvas
+    this.#c.clearRect(0, 0, canvasWidth, canvasHeight);
 
     // Set the chart title
-    // this.#c.lineWidth = this.#options.outline;
     this.#c.font = "18px Arial  ";
     this.#c.fillStyle = "#000";
-    this.#c.fillText(this.#options.title, 10, 20);
-
-    // Draw graph if required
-    if (this.#options.graph) {
-      //
-      this.#c.lineWidth = 0.7;
-      this.#c.beginPath();
-      this.#c.moveTo(0, sections[0].move_to.y);
-      this.#c.lineTo(0, canvasHeight * 0.9);
-      this.#c.stroke();
-      this.#c.beginPath();
-      this.#c.moveTo(sections[0].line_to.x, sections[0].move_to.y);
-      this.#c.lineTo(sections[0].line_to.x, canvasHeight * 0.9);
-      this.#c.stroke();
-
-      sections.forEach((section) => {
-        this.#c.fillStyle = "black";
-        this.#c.font = "10px Arial";
-        this.#c.fillText(section.scale, 0, section.move_to.y);
-        this.#c.beginPath();
-        this.#c.moveTo(section.move_to.x, section.move_to.y);
-        this.#c.lineTo(section.line_to.x, section.line_to.y);
-        this.#c.stroke();
-      });
-    }
+    this.#c.fillText(this.#options.title, 10, 18);
 
     // Draw bars and write labels
     this.#elementIndex.forEach((bar) => {
-      this.#c.fillStyle = this.#options.color;
-      this.#c.fillRect(bar.x.left, bar.y.top, bar.width, bar.height);
-      if (this.#hoverd && this.#options.hoverBackgroundColor) {
-        this.#c.fillStyle = this.#options.hoverBackgroundColor;
-        this.#c.fillRect(
-          this.#hoverd.x.left,
-          this.#hoverd.y.top,
-          this.#hoverd.width,
-          this.#hoverd.height
-        );
-      }
-
       this.#c.fillStyle = "#000";
       this.#c.font = "15px Arial";
-      this.#c.fillText(bar.data, bar.x.left, canvasHeight);
+      this.#c.fillText(bar.label, bar.x.left, canvasHeight);
+      // draw border if requested
+
+      if (this.#options.color) {
+        this.#c.fillStyle = this.#options.color;
+        this.#c.fillRect(bar.x.left, bar.y.top, bar.width, bar.height);
+      }
+      if (this.#hoverd == bar && this.#options.hoverBackgroundColor) {
+        this.#c.fillStyle = this.#options.hoverBackgroundColor;
+        this.#c.fillRect(bar.x.left, bar.y.top, bar.width, bar.height);
+      }
+
+      if (this.#options.borderColor) {
+        this.#c.lineWidth = this.#options.borderSize;
+        this.#c.strokeStyle = this.#options.borderColor;
+        this.#c.strokeRect(bar.x.left, bar.y.top, bar.width, bar.height);
+      }
     });
+    if (this.#hoverd) {
+      this.#dialog();
+    }
   }
 
-  // displays the info of the hoverd bar
   #dialog() {
+    if (!this.#legend) return false;
+
     const { position, height, width } = this.#dialog_properties;
-    this.#c.fillStyle = this.#dialog_properties.backgroundColor;
+    this.#c.fillStyle = `rgba(0,0,0,${this.#dialog_properties.opacity})`;
     this.#c.fillRect(position.x, position.y, width, height);
     let arrow_position = 0;
     let arrow_lenght = this.#dialog_properties.arrow_lenght;
@@ -228,7 +189,7 @@ class BarChart {
 
     // show bar chart color in the this.#dialog_properties box
     this.#c.fillStyle = this.#options.color;
-    this.#c.fillRect(position.x, position.y, 20, 20);
+    this.#c.fillRect(position.x, position.y, 15, 15);
     // displays  the text or info of hoverd bar
     this.#c.fillStyle = this.#dialog_properties.textColor;
     this.#c.font = this.#dialog_properties.font;
@@ -237,6 +198,11 @@ class BarChart {
       position.x + 30,
       position.y + height / 2
     );
+  }
+  getElement(index) {
+    this.#legend = false;
+    this.#hoverd = this.#elementIndex[index];
+    return this.#hoverd.data;
   }
 
   config(config) {
@@ -248,11 +214,22 @@ class BarChart {
 
     const { options, data } = config;
     // Destructure options
-    const { backgroundColor, textColor, graph, title, hoverBackgroundColor } =
-      options;
-
+    const {
+      backgroundColor,
+      textColor,
+      graph,
+      title,
+      hoverBackgroundColor,
+      borderColor,
+    } = options;
+    let { borderSize } = options;
     // Set properties directly without using variables
     if (backgroundColor) this.#options.color = backgroundColor;
+    if (borderColor) this.#options.borderColor = borderColor;
+    if (borderSize) {
+      if (borderSize > 5) borderSize = 5;
+      this.#options.borderSize = borderSize;
+    }
     if (textColor) this.#dialog_properties.textColor = textColor;
     if (graph) this.#options.graph = graph;
     if (title) this.#options.title = title;
@@ -265,24 +242,18 @@ class BarChart {
       return false;
     }
 
-    // Directly set the data property
     this.data = data;
-
     // Retrieve the 2D context only when necessary
     this.#c = this.canvasElement.getContext("2d");
-
     this.#setConfiguration(data);
-
-    // Return true to indicate successful configuration
     return true;
   }
 
   #setConfiguration(user_defined_data) {
     const dataNumbers = this.data.map((entry) => entry.data);
-
     const normalized_data = this.#covertToPercentage(
       dataNumbers,
-      (this.canvasElement.height * 70) / 100
+      this.canvasElement.height * 0.9
     );
 
     const numberOfBars = this.data.length;
@@ -295,13 +266,14 @@ class BarChart {
 
     const bars = [];
     normalized_data.forEach((barHeight, index) => {
-      const barY = (this.canvasElement.height * 90) / 100 - barHeight;
+      const barY = this.canvasElement.height * 0.95 - barHeight;
       const bar = {
         x: { left: barX, right: barX + barWidth },
         y: { top: barY },
         width: barWidth,
         height: barHeight,
-        data: this.data[index].label,
+        data: this.data[index].data,
+        label: this.data[index].label,
       };
       barX += barWidth + spacing;
       bars.push(bar);
