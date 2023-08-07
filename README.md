@@ -84,4 +84,5 @@ Currently working on the graph feature
 
 ## image
 
-![chart hover on element](/screenshots/hoverstate.png)
+![chart hover on element](/screenshots/hover.png)
+![chart](/screenshots/barchartview.png)
